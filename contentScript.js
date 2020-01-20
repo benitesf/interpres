@@ -1,3 +1,92 @@
+var trans_popup = '';
+
+function createPopup() {
+    document.documentElement.appendChild(trans_popup)
+    return $("<trans-popup>")
+}
+
+function removePopup() {
+    $("trans-popup").each(function() {
+        const self = this
+        $(this.shadowRoot.querySelector('main')).fadeOut('fast', function() {self.remove()})
+    })
+    $('#trans-popup-template').remove()
+}
+
+function showTranslationPopup(e, content) {
+    // Remove popup
+    removePopup()
+
+    const $popup = createPopup()
+    $("body").append($popup);
+
+    $popup.on("trans-popup-content-updated", function() {
+        const pos = calculatePosition(e.clientX, e.clientY, $popup)
+        $popup
+            .each(function() {
+                $(this.shadowRoot.querySelector('main')).hide()
+            })
+            .attr({ top: pos.y, left: pos.x })
+            .each(function() {
+                $(this.shadowRoot.querySelector('main')).fadeIn('fast')
+            })
+    })    
+    $popup.attr('content', content)
+}
+
+function calculatePosition(x, y, $popup) {
+    const pos = {}
+    const margin = 5
+    const anchor = 10
+    const outerWidth = Number($popup.attr('outer-width'))
+    const outerHeight = Number($popup.attr('outer-height'))
+
+    // show popup to the right of the word if it fits into window this way
+    if (x + anchor + outerWidth + margin < $(window).width()) {
+        pos.x = x + anchor        
+    }
+    // show popup to the left of the word if it fits into window this way
+    else if (x - anchor - outerWidth - margin > 0) {
+        pos.x = x - anchor - outerWidth
+    }
+    // show popup at the very left if it is not wider than window
+    else if (outerWidth + margin*2 < $(window).width()) {
+        pos.x = margin
+    }
+    // resize popup width to fit into window and position it the very left of the window
+    else {
+        const non_content_x = outerWidth - Number($popup.attr('content-width'))
+
+        $popup.attr('content-width', $(window).width() - margin*2 - non_content_x)
+        $popup.attr('content-height', Number($popup.attr('content-height')) + 4)
+
+        pos.x = margin
+    }
+
+    // show popup above the word if it fits into window this way
+    if (y - anchor - outerHeight - margin > 0) {
+        pos.y = y - anchor - outerHeight
+    }
+    // show popup below the word if it fits into window this way
+    else if (y + anchor + outerHeight + margin < $(window).height()) {
+        pos.y = y + anchor
+    }
+    // show popup at the very top of the window
+    else {
+        pos.y = margin
+    }
+
+    return pos
+}
+
+function formatTranslation(translation) {
+    return `
+        <div class="content">
+            <span class="translation"> ${translation} </span>
+        </div>
+    `
+}
+
 function escape_html(text) {
     return text.replace(XRegExp('(<|>|&)', 'g'), function ($0, $1) {
         switch ($1) {
@@ -166,12 +255,22 @@ function process(e) {
     }
     console.log("word is: " + word);
 	if (word != '') {
-		chrome.extension.sendMessage({handler: 'translate', word: word}, function(response) {            
-            const parsed = JSON.parse(response);
-			if (!parsed.translation) {
-				return
-			}
-            console.log("Translation: " + parsed.translation);
+		chrome.extension.sendMessage({handler: 'translate', word: word}, function(response) { 
+            try {
+                const parsed = JSON.parse(response);
+                if (!parsed.translation) {
+                    return
+                }
+
+                const content = formatTranslation(parsed.translation)
+                showTranslationPopup(e, content)
+                last_mouse_stop.x = e.clientX
+                last_mouse_stop.y = e.clientY
+                //console.log("Translation: " + parsed.translation);
+            }           
+            catch(error) {
+                console.log("Maybe extension is OFF")
+            }
 		})
 	}
   }
@@ -190,3 +289,59 @@ $(document).click(function(e) {
 		process(e);
 	})
 });
+
+/** Mouse event for remove trans-popup */
+const last_mouse_stop = { x: 0, y: 0 }
+
+function hasMouseReallyMoved(e) { // or is it a tremor?
+    const left_boundry = parseInt(last_mouse_stop.x) - 15,
+        right_boundry = parseInt(last_mouse_stop.x) + 15,
+        top_boundry = parseInt(last_mouse_stop.y) - 15,
+        bottom_boundry = parseInt(last_mouse_stop.y) + 15
+        
+    return e.clientX > right_boundry || e.clientX < left_boundry || e.clientY > bottom_boundry || e.clientY < top_boundry
+}
+
+$(document).mousemove(function(e) {
+    if (hasMouseReallyMoved(e)) {
+        const mousemove_without_noise = new $.Event('mousemove_without_noise')
+        mousemove_without_noise.clientX = e.clientX
+        mousemove_without_noise.clientY = e.clientY
+
+        $(document).trigger(mousemove_without_noise)
+    }
+})
+
+$(document).scroll(function() {
+    removePopup()
+})
+
+$(document).on('mousemove_without_noise', function(e) {
+    removePopup()
+})
+
+/** Register Templates */
+function registerTranslationComponent() {
+    const html = 'trans_popup.html';
+    const script = "trans_popup.js";
+
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', chrome.extension.getURL(html), true);
+    xhr.responseType = 'document';
+    xhr.onload = function(e) {
+        const doc = e.target.response;
+        const template = doc.querySelector('template');        
+        trans_popup = template;
+    };
+    xhr.send()
+
+    const s = document.createElement('script');
+    s.type = 'text/javascript';
+    s.src = chrome.extension.getURL(script);
+    s.async = true;
+    document.head.appendChild(s);
+}
+
+$(function() {
+    registerTranslationComponent()
+})
