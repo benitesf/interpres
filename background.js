@@ -1,3 +1,4 @@
+
 function translate(word, sendResponse) {
 	var mkey = '';
 	var ukey = '';
@@ -48,8 +49,45 @@ function translate(word, sendResponse) {
 				})
 			});
 		}).then((data) => {
-			const url = api_url + '/job/' + ukey + '/status';
-			setTimeout(function(){
+			var url = api_url + '/job/' + ukey + '/status';
+			const getStatus = function() {
+				$.ajax({
+					url: url,
+					async: false,
+					type: "GET",
+					contentType: "application/x-www-form-urlencoded; charset=UTF-8",
+					dataType: "json"
+				}).done(function(data) {
+					if (data["message"] != "processed") {
+						setTimeout(getStatus(), 100)
+					}
+				})
+			}
+
+			getStatus()
+
+			url = api_url + '/job/' + ukey + '/get'
+			$.ajax({
+				url: url,
+				type: 'POST',
+				contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+				dataType: 'json',
+				data: JSON.stringify({
+					"mkey": mkey
+				})
+			}).then((data) => {
+				if (data["message"]) {
+					response.translation = data["message"];
+					response.succeeded = true;
+					localStorage["last_word"] = word;
+					localStorage["last_translation"] = data["message"];
+				} else {
+					response.succeeded = false;
+				}
+				sendResponse(JSON.stringify(response));
+			})
+
+			/*setTimeout(function(){
 				$.ajax({
 					url: url,
 					type: "GET",
@@ -81,7 +119,7 @@ function translate(word, sendResponse) {
 					}
 					sendResponse(JSON.stringify(response));
 				})
-			}, 500)
+			}, getTimeout(word))*/
 		})
 	}
 
