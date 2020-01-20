@@ -12,6 +12,7 @@ if (localStorage["app"] == "on") {
 }
 
 $("#eu2es").click(function() {
+    localStorage["last_word"] = "";
     if ($("#eu2es").prop("checked")) {
         localStorage["fromLang"] = "eu";
         localStorage["toLang"] = "es";
