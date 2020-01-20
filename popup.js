@@ -20,6 +20,7 @@ $("#eu2es").click(function() {
 });
 
 $("#es2eu").click(function() {
+    localStorage["last_word"] = "";
     if ($("#es2eu").prop("checked")) {
         localStorage["fromLang"] = "es";
         localStorage["toLang"] = "eu";
