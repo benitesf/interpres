@@ -3,102 +3,149 @@
     <head>
         <title>Interpres Extension</title>
         <script type="text/javascript" src="jquery-3.4.1.min.js"></script>
+        <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+        <link rel="stylesheet" href="https://www.w3schools.com/lib/w3-theme-teal.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+        <link rel="stylesheet" href="./switch.css">
         <style>
-            /* The container */
-            .container {
+            body {
+                background: whitesmoke;
                 display: block;
-                position: relative;
-                padding-left: 35px;
-                margin-bottom: 12px;
-                cursor: pointer;
-                font-size: 18px;
-                -webkit-user-select: none;
-                -moz-user-select: none;
-                -ms-user-select: none;
-                user-select: none;
+                width: 250px;
+                height: 100px;
+                font-family: 'Fira Sans', sans-serif;
+            }            
+        </style>
+        <style>
+            hr {
+                width: 90%;
+                height: 1.5px;
+                border: 0 none;
+                margin-right: auto;
+                margin-left: auto;
+                margin-top: 1px;
+                margin-bottom: 20px;
+                background-color: #EEEEEE;
             }
-            
-            /* Hide the browser's default radio button */
-            .container input {
+            .footer {
+                width: 90%;
+                height: 1.5px;
+                border: 0 none;
+                background-color: #CFCFCF;
+                margin: 30px auto 10px auto;
+            }
+        </style>
+        <style>
+            .inputGroup {
+                background-color: #FFF;
+                display: block;
+                margin: 10px 15px 0px 15px;
+                position: relative;
+            }
+            .inputGroup label {
+                padding: 10px 30px;
+                width: 100%;
+                display: block;
+                text-align: left;
+                font-weight: 500;
+                font-size: 15px;
+                color: #3C454C;
+                cursor: pointer;
+                position: relative;
+                z-index: 2;
+                transition: color 200ms ease-in;
+                overflow: hidden;
+            }
+            .inputGroup label:before{
+                width: 10px;
+                height: 10px;
+                border-radius: 50%;
+                content: '';
+                background-color: #5562EB;
                 position: absolute;
+                left: 50%;
+                top: 50%;
+                transform: translate(-50%, -50%) scale3d(1, 1, 1);
+                transition: all 300ms cubic-bezier(0.4, 0.0, 0.2, 1);
                 opacity: 0;
+                z-index: -1;
+            }
+            .inputGroup label:after {
+                width: 32px;
+                height: 32px;
+                content: '';
+                border: 2px solid #D1D7DC;
+                background-color: #FFF;
+                background-image: url("data:image/svg+xml,%3Csvg width='32' height='32' viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M5.414 11L4 12.414l5.414 5.414L20.828 6.414 19.414 5l-10 10z' fill='%23fff' fill-rule='nonzero'/%3E%3C/svg%3E ");
+                background-repeat: no-repeat;
+                background-position: 2px 3px;
+                border-radius: 50%;
+                z-index: 2;
+                position: absolute;
+                right: 20px;
+                top: 12%;
+                transform: translate(-50%);
                 cursor: pointer;
+                transition: all 200ms ease-in;
             }
-            
-            /* Create a custom radio button */
-            .checkmark {
+            .inputGroup input:checked ~ label {
+                color: #FFF;                
+            }
+            .inputGroup input:checked ~ label:before {
+                transform: translate(-50%, -50%) scale3d(56, 56, 1);
+                opacity: 1;
+            }
+            .inputGroup input:checked ~ label:after {
+                background-color: #54E0C7;
+                border-color: #54E0C7;
+            }
+            .inputGroup input {
+                width: 32px;
+                height: 32px;
+                order: 1;
+                z-index: 2;
                 position: absolute;
-                top: 0;
-                left: 0;
-                height: 25px;
-                width: 25px;
-                background-color: #eee;
-                border-radius: 50%;
+                right: 30px;
+                top: 50%;
+                transform: translate(-50%);
+                cursor: pointer;
+                visibility: hidden;
+                
             }
-            
-            /* On mouse-over, add a grey background color */
-            .container:hover input ~ .checkmark {
-                background-color: #ccc;
+            .form {
+                padding: 0 16px;
+                max-width: 550px;
+                margin: 50px auto;
+                font-size: 18px;
+                font-weight: 600;
+                line-height: 36px;
             }
-            
-            /* When the radio button is checked, add a blue background */
-            .container input:checked ~ .checkmark {
-                background-color: #2196F3;
-            }
-            
-            /* Create the indicator (the dot/circle - hidden when not checked) */
-            .checkmark:after {
-                content: "";
-                position: absolute;
-                display: none;
-            }
-            
-            /* Show the indicator (dot/circle) when checked */
-            .container input:checked ~ .checkmark:after {
-                display: block;
-            }
-            
-            /* Style the indicator (dot/circle) */
-            .container .checkmark:after {
-                top: 9px;
-                left: 9px;
-                width: 8px;
-                height: 8px;
-                border-radius: 50%;
-                background: white;
-            }
-
-            .content {
-                height: 110px;
-                width: 130px;
-            }
-
-            .heading {
-                display: block;
-                position: relative;
-                text-align: center;
-                margin-bottom: 15px;
-                padding-top: 2px;
-                font-size: 22px;
-            }
-        </style>                
+        </style>
     </head>
     <body>
-        <div class="content">
-            <div class="heading">Interpres</div>
-            <div class="option">
-                <div class="lang_ops">
-                    <label class="container"> eu2es
-                        <input type="radio" name="lang_op" value="eu2es" id="eu2es">
-                        <span class="checkmark"></span>
-                    </label>
-                    <label class="container"> es2eu
-                        <input type="radio" name="lang_op" value="es2eu" id="es2eu">
-                        <span class="checkmark"></span>
-                    </label>                    
-                </div>
-            </div>
+        <div class="w3-bar w3-red w3-xlarge">
+            <a class="w3-bar-item w3-button" href="#"><i class="fa fa-bars"></i></a>
+            <span class="w3-bar-item">Interpres</span>
         </div>
+
+        <div class="switch" id="switch">
+            <input type="checkbox" id="power-cbx" class="power">
+            <label for="power-cbx" class="power-lbl" id="power-lbl"></label>
+        </div>
+
+        <hr>
+
+        <div class="inputGroup">
+            <input type="radio" name="lang_op" value="eu2es" id="eu2es">
+            <label for="eu2es"> EU to ES</label>
+        </div>
+        <div class="inputGroup">
+            <input type="radio" name="lang_op" value="es2eu" id="es2eu">
+            <label for="es2eu"> ES to EU</label>
+        </div>
+
+        <hr class="footer">
+
         <script type="text/javascript" src="popup.js"></script>         
     </body>
 </html>
