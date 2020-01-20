@@ -90,8 +90,19 @@ function translate(word, sendResponse) {
 chrome.extension.onMessage.addListener(function(request, sender, sendResponse) {
 	switch (request.handler) {
         case 'translate':
-            translate(request.word, sendResponse);
-            break
+			if (localStorage["app"] == "on"){
+				translate(request.word, sendResponse);
+			} else {				
+				sendResponse()
+			}            
+			break
+		case 'switch_activated':
+			if (localStorage["app"] == "on") {
+				chrome.browserAction.setIcon({path: 'images/to_80.png'});
+			} else {
+				chrome.browserAction.setIcon({path: 'images/to_bw_90.png'});
+			}
+			break
         default:
             console.error('Unknown handler')
             sendResponse("unknown handler")
@@ -114,4 +125,5 @@ chrome.browserAction.onClicked.addListener(function(tab) {
 function setDefaultOptions() {
 	localStorage["fromLang"] = "eu";
 	localStorage["toLang"] = "es";
+	localStorage["app"] = "on";
 }
