@@ -266,6 +266,7 @@ function process(e) {
                 showTranslationPopup(e, content)
                 last_mouse_stop.x = e.clientX
                 last_mouse_stop.y = e.clientY
+                toClipboard = parsed.translation
                 //console.log("Translation: " + parsed.translation);
             }           
             catch(error) {
@@ -290,6 +291,20 @@ $(document).click(function(e) {
 	})
 });
 
+// On Key pressed
+$(document).keydown(function(e) {
+    if (e.keyCode == 67 && e.ctrlKey && e.altKey) {
+        const input = document.createElement('input')
+        input.style.position = 'fixed'
+        input.style.opacity = 0
+        input.value = toClipboard
+        document.body.appendChild(input)
+        input.select()
+        document.execCommand('copy')
+        document.body.removeChild(input)
+    }
+});
+
 /** Mouse event for remove trans-popup */
 const last_mouse_stop = { x: 0, y: 0 }
 
@@ -310,6 +325,14 @@ $(document).mousemove(function(e) {
 
         $(document).trigger(mousemove_without_noise)
     }
+})
+
+// Context Menu
+var last_e = '';
+var toClipboard = '';
+
+$(document).contextmenu(function(e) {
+    last_e = e
 })
 
 $(document).scroll(function() {
@@ -344,4 +367,86 @@ function registerTranslationComponent() {
 
 $(function() {
     registerTranslationComponent()
+})
+
+function isInputOrTextArea(e) {
+    var val = 'false';    
+    if ($(e.target).is("textarea,input[type=text]")) {
+        val = 'true'
+    }
+
+    return val
+}
+
+function isDivEditable(e) {
+    var val = 'false'
+    var g = $(e.target).attr("g_editable")
+    if (g == "true") {
+        val = 'true'
+    }
+
+    return val
+}
+
+function replaceSelectedText(replacementText, e) {
+    if (isInputOrTextArea(e) == 'true') {        
+        var obj = e.target;
+        var start = obj.selectionStart;
+        var finish = obj.selectionEnd;
+        var allText = obj.value;
+        
+        var sel = allText.substring(start, finish);
+        var newText = allText.substring(0, start)+replacementText+allText.substring(finish, allText.length);
+        obj.value = newText
+    } else if (isDivEditable(e) == "true"){
+        var sel, range;
+        if (window.getSelection) {
+            sel = window.getSelection();
+            if (sel.rangeCount) {
+                range = sel.getRangeAt(0);
+                range.deleteContents();
+                range.insertNode(document.createTextNode(replacementText))
+            }
+        }    
+    } else {
+        console.log("No editable!!!")
+    }
+}
+
+chrome.extension.onMessage.addListener(function(request, sender, sendResponse) {
+	switch (request.handler) {
+        case 'contextMenusTranslate':
+            var word = window.getSelection().toString()
+            console.log("HEY: "+ word)
+            if (word != '') {
+                chrome.extension.sendMessage({handler: 'translate', word: word}, function(response) { 
+                    try {
+                        const parsed = JSON.parse(response);
+                        if (!parsed.translation) {
+                            return
+                        }
+                        
+                        const content = formatTranslation(parsed.translation)
+                        showTranslationPopup(last_e, content)
+                        last_mouse_stop.x = last_e.clientX
+                        last_mouse_stop.y = last_e.clientY
+                        toClipboard = parsed.translation
+                        
+                        if (request.action == "replace") {
+                            replaceSelectedText(parsed.translation, last_e)
+                        }
+
+                        console.log("Translation: " + parsed.translation);
+                    }           
+                    catch(error) {
+                        console.log("Maybe extension is OFF")
+                    }
+                })
+            }
+            sendResponse({})     
+            break
+        default:
+            console.error('Unknown handler')
+            sendResponse("unknown handler")
+	}
 })

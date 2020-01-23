@@ -58,7 +58,7 @@ function translate(word, sendResponse) {
 					contentType: "application/x-www-form-urlencoded; charset=UTF-8",
 					dataType: "json"
 				}).done(function(data) {
-					if (data["message"] != "processed") {
+					if (data["message"] == "processing") {
 						setTimeout(getStatus(), 100)
 					}
 				})
@@ -86,40 +86,6 @@ function translate(word, sendResponse) {
 				}
 				sendResponse(JSON.stringify(response));
 			})
-
-			/*setTimeout(function(){
-				$.ajax({
-					url: url,
-					type: "GET",
-					contentType: "application/x-www-form-urlencoded; charset=UTF-8",
-					dataType: "json"
-				}).then((data) => {
-					if (data["message"] == "processed") {
-						const url = api_url + '/job/' + ukey + '/get'
-						return $.ajax({
-							url: url,
-							type: 'POST',
-							contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
-							dataType: 'json',
-							data: JSON.stringify({
-								"mkey": mkey
-							})
-						})
-					} else {
-						return {}
-					}
-				}).then((data) => {
-					if (data["message"]) {
-						response.translation = data["message"];
-						response.succeeded = true;
-						localStorage["last_word"] = word;
-						localStorage["last_translation"] = data["message"];
-					} else {
-						response.succeeded = false;
-					}
-					sendResponse(JSON.stringify(response));
-				})
-			}, getTimeout(word))*/
 		})
 	}
 
@@ -154,7 +120,33 @@ chrome.runtime.onInstalled.addListener(function() {
 	localStorage["mkey_for_es2eu"] = "85b92f176fe0efac";
 	// Set default values for popup
 	setDefaultOptions();
+
+	// Create the context menu
+	chrome.contextMenus.create({
+		"id": "translateFromContextMenus",
+		"title": "Translate <3",
+		"contexts": ["page", "selection", "link"]
+	});
+
+	chrome.contextMenus.create({
+		"id": "translateFromContextMenusAndReplace",
+		"title": "Translate and Replace <3",
+		"contexts": ["page", "selection", "link"]
+	});
 });
+
+
+chrome.contextMenus.onClicked.addListener(function(info, tab) {
+	if (info.menuItemId == "translateFromContextMenus") {
+		chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+			chrome.tabs.sendMessage(tabs[0].id, { handler: "contextMenusTranslate" }, function(response) {});  
+		});
+	} else if (info.menuItemId == "translateFromContextMenusAndReplace") {
+		chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+			chrome.tabs.sendMessage(tabs[0].id, { handler: "contextMenusTranslate", action: "replace" }, function(response) {});
+		});
+	}
+})
 
 chrome.browserAction.onClicked.addListener(function(tab) {
 	chrome.browserAction.setPopup({popup: "popup.html"});

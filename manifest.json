@@ -26,7 +26,8 @@
 	},
 	"permissions": [
 		"tabs",
-		"storage"
+		"storage",
+		"contextMenus"
 	],
 	"web_accessible_resources": [
 		"trans_popup.html",
