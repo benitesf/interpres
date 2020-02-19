@@ -6,7 +6,7 @@ function translate(word, sendResponse) {
 	const last_translation = localStorage["last_translation"];
 	const fromLang = localStorage["fromLang"];
 	const toLang = localStorage["toLang"];
-	const api_url = 'https://www.batua.eus/api/'+fromLang+'2'+toLang;
+	const api_url = 'https://www.batua.eus/backend/'+fromLang+'2'+toLang;
 	const model = 'generic_'+fromLang+'2'+toLang;
 	
 	if (fromLang == "eu") {
